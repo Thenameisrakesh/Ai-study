@@ -1,0 +1,66 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  name         String?
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  quizzes      Quiz[]
+  attempts     Attempt[]
+  mistakes     Mistake[]
+}
+
+model Quiz {
+  id            String     @id @default(uuid())
+  title         String
+  topic         String
+  isAIGenerated Boolean    @default(false)
+  userId        String
+  user          User       @relation(fields: [userId], references: [id])
+  questions     Question[]
+  attempts      Attempt[]
+  createdAt     DateTime   @default(now())
+}
+
+model Question {
+  id                 String    @id @default(uuid())
+  quizId             String
+  quiz               Quiz      @relation(fields: [quizId], references: [id])
+  text               String
+  options            String    // Stored as JSON string
+  correctOptionIndex Int
+  explanation        String?
+  mistakes           Mistake[]
+}
+
+model Attempt {
+  id        String    @id @default(uuid())
+  quizId    String
+  quiz      Quiz      @relation(fields: [quizId], references: [id])
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  score     Int
+  total     Int
+  mistakes  Mistake[]
+  createdAt DateTime  @default(now())
+}
+
+model Mistake {
+  id         String   @id @default(uuid())
+  attemptId  String
+  attempt    Attempt  @relation(fields: [attemptId], references: [id])
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id])
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  topic      String
+  createdAt  DateTime @default(now())
+}
